@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#set -e
+baseDir=$(dirname $0)
+
+source $baseDir/config
+if [ "$token" = "" ] || [ "$zoneID" = "" ] || [ "$domain" = "" ]; then
+    echo Environment variables: \"token\", \"zoneID\", and \"domain\" must defined in \"config\" file.
+    exit
+fi
+baseURL=https://api.cloudflare.com/client/v4/
+endpoint=zones/$zoneID/dns_records
+
+H1=Authorization
+H2=Content-Type
+declare -A headers
+headers[$H1]="Bearer $token"
+headers[$H2]=application/json
+
+FQDN=
+queryString=
+if [ $# -ge 2 ]; then
+    FQDN=$2.$domain
+    queryString=$queryString?name=$FQDN
+fi
+requestURL=$baseURL$endpoint$queryString
+response=$(curl -sS -H "$H1: ${headers[$H1]}" -H "$H2: ${headers[$H2]}" $requestURL)
+
+printf '%(%Y/%m/%d %H:%M:%S)T: '
+if [ $# -ge 1 ]; then
+    shopt -s nocasematch
+    case $1 in
+    GET)
+        echo $response | jq .
+        ;;
+    PUT)
+        if [ $# -ge 2 ]; then
+            if [ "$interface" = "" ]; then
+                echo Environment variable: \"interface\" is not defined in \"config\" file.
+                exit
+            fi
+            myIP=$(nmcli device show $interface | grep IP4.ADDRESS | awk -F " " '{print $2}' | cut -d/ -f1)
+            DNSIP=$(echo $response | jq -r .result[0].content)
+            if [ "$DNSIP" = "$myIP" ]; then
+                echo Already up to date.
+            else
+                DNSID=$(echo $response | jq -r .result[0].id)
+                requestURL=$baseURL$endpoint/$DNSID
+                curl -sS -X PUT -H "$H1: ${headers[$H1]}" -H "$H2: ${headers[$H2]}" $requestURL -d @- <<EOF
+{
+    "type": "A",
+    "name": "$FQDN",
+    "content": "$myIP",
+    "ttl": 120
+}
+EOF
+            fi
+        else
+            echo No subdomain provided.
+            exit
+        fi
+        ;;
+    *)
+        echo Request method \"$1\" is not supported.
+        ;;
+    esac
+else
+    echo No request method provided.
+    exit
+fi
