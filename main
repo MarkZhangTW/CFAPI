@@ -38,6 +38,7 @@ if [ $# -ge 1 ]; then
                 echo Environment variable: \"interface\" is not defined in \"config\" file.
                 exit
             fi
+            #myIP=$(netsh interface ipv4 show addresses $interface | grep "IP Address:" | awk '{print $3}' | tr -d '\r\n')
             myIP=$(nmcli device show $interface | grep IP4.ADDRESS | awk -F " " '{print $2}' | cut -d/ -f1)
             DNSIP=$(echo $response | jq -r .result[0].content)
             if [ "$DNSIP" = "$myIP" ]; then
