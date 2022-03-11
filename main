@@ -51,7 +51,7 @@ if [ $# -ge 1 ]; then
     "type": "A",
     "name": "$FQDN",
     "content": "$myIP",
-    "ttl": 120
+    "ttl": 300
 }
 EOF
             fi
