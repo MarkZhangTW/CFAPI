@@ -39,7 +39,8 @@ if [ $# -ge 1 ]; then
                 exit
             fi
             #myIP=$(netsh interface ipv4 show addresses $interface | grep "IP Address:" | awk '{print $3}' | tr -d '\r\n')
-            myIP=$(nmcli device show $interface | grep IP4.ADDRESS | awk -F " " '{print $2}' | cut -d/ -f1)
+            #myIP=$(nmcli device show $interface | grep IP4.ADDRESS | awk -F " " '{print $2}' | cut -d/ -f1)
+            myIP=$(ip a show $interface | grep inet | head -1 | cut -d/ -f1 | awk '{print $2}')
             DNSIP=$(echo $response | jq -r .result[0].content)
             if [ "$DNSIP" = "$myIP" ]; then
                 echo Already up to date.
