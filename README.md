@@ -11,7 +11,7 @@ It's working with `nmcli` now if you want to update IP of a DNS record.
 Get main script from this repo.
 ```bash
 # 1. Get main script from this repo.
-git clone --depth 1 https://github.com/markzhang1996/CFAPI.git
+git clone --depth 1 https://github.com/MarkZhangTW/CFAPI.git
 # 2. Make .CFAPI/main executable.
 chmod u+x ./CFAPI/main
 ```
